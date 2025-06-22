@@ -62,15 +62,36 @@ const Orders = () => {
   const [isOrderDetailsOpen, setIsOrderDetailsOpen] = useState(false);
   const [isPDFExportModalOpen, setIsPDFExportModalOpen] = useState(false);
 
+  // Debounced search state
+  const [searchDebounce, setSearchDebounce] = useState<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     fetchOrders();
   }, [currentPage, filterStatus, filterCustomer, filterPaymentMethod, dateFrom, dateTo]);
 
-  const fetchOrders = async () => {
+  // Handle search with debouncing - reset to page 1 when searching
+  useEffect(() => {
+    if (searchDebounce) {
+      clearTimeout(searchDebounce);
+    }
+
+    const timeout = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page when searching
+      fetchOrders(1); // Fetch with search term
+    }, 500);
+
+    setSearchDebounce(timeout);
+
+    return () => {
+      if (timeout) clearTimeout(timeout);
+    };
+  }, [searchTerm]);
+
+  const fetchOrders = async (page = currentPage) => {
     try {
       setLoading(true);
       const params: any = {
-        page: currentPage,
+        page: page,
         limit: 20
       };
 
@@ -90,11 +111,22 @@ const Orders = () => {
         params.dateTo = dateTo;
       }
 
+      // Add search term to API parameters
+      if (searchTerm.trim()) {
+        params.search = searchTerm.trim();
+      }
+
+      // Add payment method filter to API parameters
+      if (filterPaymentMethod !== "all") {
+        params.paymentMethod = filterPaymentMethod;
+      }
+
       const response = await salesApi.getAll(params);
       
       if (response.success) {
         setOrders(response.data.sales);
         setTotalPages(response.data.pagination.totalPages);
+        setCurrentPage(response.data.pagination.currentPage || page);
         setSummary(response.data.summary);
       }
     } catch (error) {
@@ -457,7 +489,7 @@ const Orders = () => {
 
   const handleSearch = () => {
     setCurrentPage(1);
-    fetchOrders();
+    fetchOrders(1);
   };
 
   const handleAdvancedPDFExport = async (options: ExportOptions) => {
@@ -660,17 +692,6 @@ const Orders = () => {
     }
   };
 
-  const filteredOrders = orders.filter(order => {
-    const matchesSearch = 
-      order.orderNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (order.customerName && order.customerName.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      order.items.some(item => item.productName.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesPaymentMethod = filterPaymentMethod === "all" || order.paymentMethod === filterPaymentMethod;
-    
-    return matchesSearch && matchesPaymentMethod;
-  });
-
   if (loading) {
     return (
       <div className="flex-1 p-4 md:p-6 space-y-6 min-h-screen bg-slate-50">
@@ -846,7 +867,7 @@ const Orders = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredOrders.map((order) => {
+                {orders.map((order) => {
                   // Calculate final total without tax (subtotal - discount)
                   const finalTotal = order.subtotal - order.discount;
                   return (
@@ -905,7 +926,7 @@ const Orders = () => {
             </Table>
           </div>
 
-          {filteredOrders.length === 0 && (
+          {orders.length === 0 && (
             <div className="text-center py-8 text-slate-500">
               No orders found matching your criteria.
             </div>
