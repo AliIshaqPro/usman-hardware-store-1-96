@@ -57,6 +57,27 @@ const Products = () => {
     product: null as any
   });
 
+  // Add function to fetch all products for the modal
+  const fetchAllProductsForModal = async (): Promise<any[]> => {
+    try {
+      const params: any = {
+        limit: 10000, // Large number to get all products
+        status: 'active'
+      };
+      
+      const response = await productsApi.getAll(params);
+      
+      if (response.success) {
+        const productData = response.data.products || response.data || [];
+        return Array.isArray(productData) ? productData : [];
+      }
+      return [];
+    } catch (error) {
+      console.error('Failed to fetch all products for modal:', error);
+      return [];
+    }
+  };
+
   useEffect(() => {
     fetchProducts(1);
     fetchCategories();
@@ -802,8 +823,8 @@ const Products = () => {
         open={filteredProductsModal.open}
         onOpenChange={(open) => setFilteredProductsModal(prev => ({ ...prev, open }))}
         title={filteredProductsModal.title}
-        products={products}
         filterType={filteredProductsModal.filterType}
+        onFetchAllProducts={fetchAllProductsForModal}
       />
 
       <ProductDetailsModal
