@@ -1,75 +1,53 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { ThemeProvider } from "@/components/ThemeProvider";
-import { AppSidebar } from "@/components/AppSidebar";
-import { Header } from "@/components/Header";
+import Index from "./pages/Index";
+import ThemeBuilder from "./pages/ThemeBuilder";
+import Themes from "./pages/Themes";
+import About from "./pages/About";
+import Support from "./pages/Support";
+import Blog from "./pages/Blog";
+import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
-import Products from "./pages/Products";
-import Sales from "./pages/Sales";
-import Orders from "./pages/Orders";
-import Customers from "./pages/Customers";
-import Inventory from "./pages/Inventory";
-import Finance from "./pages/Finance";
-import Reports from "./pages/Reports";
 import NotFound from "./pages/NotFound";
-import Suppliers from "./pages/Suppliers";
-import PurchaseOrders from "./pages/PurchaseOrders";
-import Quotations from "./pages/Quotations";
-import ExpenseTracking from "./pages/ExpenseTracking";
-import CustomerInsights from "./pages/CustomerInsights";
-import Notifications from "./pages/Notifications";
-import Settings from "./pages/Settings";
-import BackupSync from "./pages/BackupSync";
-import Calendar from "./pages/Calendar";
-import AccountsReceivable from "./pages/AccountsReceivable";
+import ContactPage from "./pages/Contact";
+import ThemeDetails from "./pages/ThemeDetails";
+import { LiveChat } from "./components/ui/live-chat";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // default: true
+      retry: 1,
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="hardware-store-theme">
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <SidebarProvider>
-            <div className="min-h-screen flex w-full bg-background">
-              <AppSidebar />
-              <div className="flex-1 flex flex-col overflow-hidden">
-                <Header />
-                <main className="flex-1 overflow-auto custom-scrollbar">
-                  <Routes>
-                    <Route path="/" element={<Dashboard />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/sales" element={<Sales />} />
-                    <Route path="/orders" element={<Orders />} />
-                    <Route path="/customers" element={<Customers />} />
-                    <Route path="/inventory" element={<Inventory />} />
-                    <Route path="/suppliers" element={<Suppliers />} />
-                    <Route path="/purchase-orders" element={<PurchaseOrders />} />
-                    <Route path="/quotations" element={<Quotations />} />
-                    <Route path="/expense-tracking" element={<ExpenseTracking />} />
-                    <Route path="/customer-insights" element={<CustomerInsights />} />
-                    <Route path="/notifications" element={<Notifications />} />
-                    <Route path="/settings" element={<Settings />} />
-                    <Route path="/backup" element={<BackupSync />} />
-                    <Route path="/calendar" element={<Calendar />} />
-                    <Route path="/accounts-receivable" element={<AccountsReceivable />} />
-                    <Route path="/finance" element={<Finance />} />
-                    <Route path="/reports" element={<Reports />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </main>
-              </div>
-            </div>
-          </SidebarProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </ThemeProvider>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/builder" element={<ThemeBuilder />} />
+          <Route path="/themes" element={<Themes />} />
+          <Route path="/themes/:themeId" element={<ThemeDetails />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/support" element={<Support />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/contact" element={<ContactPage />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+        <LiveChat />
+      </BrowserRouter>
+    </TooltipProvider>
   </QueryClientProvider>
 );
 

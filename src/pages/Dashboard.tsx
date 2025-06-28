@@ -1,1038 +1,255 @@
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+import React from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { Package, Search, Plus, Edit, Trash2, AlertTriangle, RefreshCw, FileText } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { productsApi, categoriesApi, unitsApi } from "@/services/api";
-import { ProductDetailsModal } from "@/components/sales/ProductDetailsModal";
-import { FilteredProductsModal } from "@/components/FilteredProductsModal";
-import { Eye } from "lucide-react";
-import { generateSKU } from "@/utils/skuGenerator";
-import jsPDF from 'jspdf';
+import { Card, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Grid, Bookmark, Settings, User, CreditCard, Download, Bell, LogOut } from "lucide-react";
 
-const Products = () => {
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCategoryDialogOpen, setIsCategoryDialogOpen] = useState(false);
-  const [isPdfExportDialogOpen, setIsPdfExportDialogOpen] = useState(false);
-  const [selectedExportCategory, setSelectedExportCategory] = useState("all");
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [units, setUnits] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [newCategory, setNewCategory] = useState("");
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalItems: 0,
-    itemsPerPage: 20
-  });
-  const [filteredProductsModal, setFilteredProductsModal] = useState({
-    open: false,
-    title: '',
-    filterType: 'all' as 'lowStock' | 'outOfStock' | 'inStock' | 'all'
-  });
-  const [productDetailsModal, setProductDetailsModal] = useState({
-    open: false,
-    product: null as any
-  });
-
-  useEffect(() => {
-    fetchProducts(1);
-    fetchCategories();
-    fetchUnits();
-  }, [searchTerm, categoryFilter]);
-
-  const fetchCategories = async () => {
-    try {
-      const response = await categoriesApi.getAll();
-      if (response.success && response.data) {
-        console.log('Categories response:', response.data);
-        const categoryList = [
-          { value: "all", label: "All Categories" }
-        ];
-        
-        if (Array.isArray(response.data)) {
-          response.data.forEach((cat: any) => {
-            if (typeof cat === 'string') {
-              categoryList.push({ value: cat, label: cat });
-            } else if (cat && typeof cat === 'object' && cat.name) {
-              categoryList.push({ value: cat.name, label: cat.name });
-            }
-          });
-        }
-        
-        setCategories(categoryList);
-      }
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-      setCategories([
-        { value: "all", label: "All Categories" },
-        { value: "hinges", label: "Hinges & Hardware" },
-        { value: "locks", label: "Locks & Security" },
-        { value: "handles", label: "Handles & Knobs" },
-        { value: "fasteners", label: "Fasteners & Screws" },
-        { value: "sliding", label: "Sliding Systems" },
-        { value: "tools", label: "Tools & Equipment" }
-      ]);
-    }
-  };
-
-  const fetchUnits = async () => {
-    try {
-      const response = await unitsApi.getAll();
-      if (response.success && response.data) {
-        console.log('Units response:', response.data);
-        const unitsList: any[] = [];
-        
-        if (Array.isArray(response.data)) {
-          response.data.forEach((unit: any) => {
-            if (typeof unit === 'string') {
-              unitsList.push({ value: unit, label: unit });
-            } else if (unit && typeof unit === 'object') {
-              unitsList.push({ 
-                value: unit.name || unit.value, 
-                label: unit.label || unit.name || unit.value 
-              });
-            }
-          });
-        }
-        
-        setUnits(unitsList);
-      }
-    } catch (error) {
-      console.error('Failed to fetch units:', error);
-      setUnits([
-        { value: "pieces", label: "Pieces" },
-        { value: "kg", label: "Kilograms" },
-        { value: "meters", label: "Meters" },
-        { value: "liters", label: "Liters" },
-        { value: "sets", label: "Sets" },
-      ]);
-    }
-  };
-
-  const fetchProducts = async (page = 1) => {
-    try {
-      setLoading(true);
-      const params: any = {
-        page,
-        limit: 20,
-        status: 'active'
-      };
-      
-      if (searchTerm) params.search = searchTerm;
-      if (categoryFilter !== 'all') params.category = categoryFilter;
-
-      const response = await productsApi.getAll(params);
-      
-      if (response.success) {
-        const productData = response.data.products || response.data || [];
-        setProducts(Array.isArray(productData) ? productData : []);
-        
-        if (response.data.pagination) {
-          setPagination(response.data.pagination);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load products",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleStockExportPDF = async (categoryToExport = "all") => {
-    try {
-      setExportLoading(true);
-      
-      // Fetch all products for export (without pagination)
-      const params: any = { 
-        limit: 10000, // Large number to get all products
-        status: 'active' 
-      };
-      
-      // Add category filter if not "all"
-      if (categoryToExport !== "all") {
-        params.category = categoryToExport;
-      }
-      
-      const response = await productsApi.getAll(params);
-      
-      if (response.success) {
-        const allProducts = response.data.products || response.data || [];
-        
-        // Create PDF
-        const pdf = new jsPDF();
-        const pageWidth = pdf.internal.pageSize.width;
-        const pageHeight = pdf.internal.pageSize.height;
-        const margin = 20;
-        let yPos = margin;
-
-        // Title
-        pdf.setFontSize(20);
-        pdf.setFont('helvetica', 'bold');
-        const title = categoryToExport === "all" ? 'Complete Stock Export Report' : `Stock Report - ${categoryToExport}`;
-        pdf.text(title, pageWidth / 2, yPos, { align: 'center' });
-        yPos += 15;
-
-        // Export info
-        pdf.setFontSize(10);
-        pdf.setFont('helvetica', 'normal');
-        pdf.text(`Export Date: ${new Date().toLocaleString()}`, margin, yPos);
-        yPos += 8;
-        pdf.text(`Total Products: ${allProducts.length}`, margin, yPos);
-        yPos += 8;
-        if (categoryToExport !== "all") {
-          pdf.text(`Category: ${categoryToExport}`, margin, yPos);
-          yPos += 8;
-        }
-
-        // Calculate total stock value
-        const totalStockValue = allProducts.reduce((total: number, product: any) => {
-          return total + (product.stock * (product.costPrice || product.price));
-        }, 0);
-        pdf.text(`Total Stock Value: PKR ${totalStockValue.toLocaleString()}`, margin, yPos);
-        yPos += 15;
-
-        // Table headers
-        pdf.setFontSize(8);
-        pdf.setFont('helvetica', 'bold');
-        const headers = ['Product Name', 'SKU', 'Category', 'Stock', 'Unit', 'Price', 'Value'];
-        const colWidths = [50, 30, 25, 20, 15, 25, 25];
-        let xPos = margin;
-
-        headers.forEach((header, index) => {
-          pdf.text(header, xPos, yPos);
-          xPos += colWidths[index];
-        });
-        yPos += 8;
-
-        // Draw line under headers
-        pdf.line(margin, yPos - 2, pageWidth - margin, yPos - 2);
-        yPos += 3;
-
-        // Table data
-        pdf.setFont('helvetica', 'normal');
-        allProducts.forEach((product: any) => {
-          // Check if we need a new page
-          if (yPos > pageHeight - 30) {
-            pdf.addPage();
-            yPos = margin;
-          }
-
-          xPos = margin;
-          const rowData = [
-            product.name.substring(0, 20) + (product.name.length > 20 ? '...' : ''),
-            product.sku,
-            product.category.substring(0, 12) + (product.category.length > 12 ? '...' : ''),
-            product.stock.toString(),
-            product.unit,
-            product.price.toLocaleString(),
-            (product.stock * (product.costPrice || product.price)).toLocaleString()
-          ];
-
-          rowData.forEach((data, index) => {
-            pdf.text(data, xPos, yPos);
-            xPos += colWidths[index];
-          });
-          yPos += 6;
-        });
-
-        // Footer
-        yPos = pageHeight - 20;
-        pdf.setFontSize(8);
-        pdf.text(`Generated by Inventory Management System`, pageWidth / 2, yPos, { align: 'center' });
-
-        // Save PDF
-        const filename = categoryToExport === "all" 
-          ? `stock_export_${new Date().toISOString().split('T')[0]}.pdf`
-          : `stock_export_${categoryToExport}_${new Date().toISOString().split('T')[0]}.pdf`;
-        pdf.save(filename);
-
-        toast({
-          title: "PDF Export Successful",
-          description: `Exported ${allProducts.length} products to PDF${categoryToExport !== "all" ? ` for category: ${categoryToExport}` : ''}.`,
-        });
-      }
-    } catch (error) {
-      console.error('Failed to export stock to PDF:', error);
-      toast({
-        title: "PDF Export Failed",
-        description: "Failed to export stock data to PDF. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setExportLoading(false);
-      setIsPdfExportDialogOpen(false);
-    }
-  };
-
-  const handlePdfExportClick = () => {
-    setIsPdfExportDialogOpen(true);
-  };
-
-  const handleConfirmPdfExport = () => {
-    handleStockExportPDF(selectedExportCategory);
-  };
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= pagination.totalPages) {
-      fetchProducts(page);
-    }
-  };
-
-  const handleAddProduct = async (formData: any) => {
-    try {
-      const response = await productsApi.create(formData);
-      if (response.success) {
-        setIsDialogOpen(false);
-        fetchProducts();
-        toast({
-          title: "Product Added",
-          description: "New product has been added successfully.",
-        });
-      }
-    } catch (error) {
-      console.error('Failed to add product:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add product",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleEditProduct = async (formData: any) => {
-    try {
-      const response = await productsApi.update(selectedProduct.id, formData);
-      if (response.success) {
-        setIsEditDialogOpen(false);
-        setSelectedProduct(null);
-        fetchProducts();
-        toast({
-          title: "Product Updated",
-          description: "Product has been updated successfully.",
-        });
-      }
-    } catch (error) {
-      console.error('Failed to update product:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update product",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteProduct = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this product?")) return;
-    
-    try {
-      const response = await productsApi.delete(id);
-      if (response.success) {
-        fetchProducts();
-        toast({
-          title: "Product Deleted",
-          description: "Product has been removed from inventory.",
-        });
-      }
-    } catch (error) {
-      console.error('Failed to delete product:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete product",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAddCategory = async () => {
-    if (!newCategory.trim()) return;
-    
-    try {
-      const response = await categoriesApi.create({ name: newCategory });
-      if (response.success) {
-        setNewCategory("");
-        setIsCategoryDialogOpen(false);
-        fetchCategories();
-        toast({
-          title: "Category Added",
-          description: "New category has been added successfully.",
-        });
-      }
-    } catch (error) {
-      console.error('Failed to add category:', error);
-      toast({
-        title: "Error",
-        description: "Failed to add category",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const openEditDialog = (product: any) => {
-    setSelectedProduct(product);
-    setIsEditDialogOpen(true);
-  };
-
-  const getCategoryColor = (category: string) => {
-    const colors: { [key: string]: string } = {
-      hinges: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100",
-      locks: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100",
-      handles: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-100",
-      fasteners: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100",
-      sliding: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-100",
-      tools: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100",
-    };
-    return colors[category] || "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100";
-  };
-
-  const lowStockProducts = products.filter(product => product.stock <= product.minStock);
-
-  const renderPagination = () => {
-    if (pagination.totalPages <= 1) return null;
-
-    const { currentPage, totalPages } = pagination;
-    const pages = [];
-
-    pages.push(1);
-
-    if (currentPage > 3) {
-      pages.push('ellipsis-start');
-    }
-
-    const startPage = Math.max(2, currentPage - 1);
-    const endPage = Math.min(totalPages - 1, currentPage + 1);
-
-    for (let i = startPage; i <= endPage; i++) {
-      if (!pages.includes(i)) {
-        pages.push(i);
-      }
-    }
-
-    if (currentPage < totalPages - 2) {
-      pages.push('ellipsis-end');
-    }
-
-    if (totalPages > 1 && !pages.includes(totalPages)) {
-      pages.push(totalPages);
-    }
-
-    return (
-      <Pagination>
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious 
-              onClick={() => handlePageChange(currentPage - 1)}
-              className={currentPage <= 1 ? "pointer-events-none opacity-50 cursor-not-allowed" : "cursor-pointer"}
-            />
-          </PaginationItem>
-          
-          {pages.map((page, index) => (
-            <PaginationItem key={index}>
-              {page === 'ellipsis-start' || page === 'ellipsis-end' ? (
-                <PaginationEllipsis />
-              ) : (
-                <PaginationLink
-                  onClick={() => handlePageChange(page as number)}
-                  isActive={currentPage === page}
-                  className="cursor-pointer"
-                >
-                  {page}
-                </PaginationLink>
-              )}
-            </PaginationItem>
-          ))}
-          
-          <PaginationItem>
-            <PaginationNext 
-              onClick={() => handlePageChange(currentPage + 1)}
-              className={currentPage >= totalPages ? "pointer-events-none opacity-50 cursor-not-allowed" : "cursor-pointer"}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
-    );
-  };
-
-  const openFilteredModal = (filterType: 'lowStock' | 'outOfStock' | 'inStock' | 'all', title: string) => {
-    setFilteredProductsModal({
-      open: true,
-      title,
-      filterType
-    });
-  };
-
-  const openProductDetails = (product: any) => {
-    setProductDetailsModal({
-      open: true,
-      product
-    });
-  };
-
-  const fetchAllProductsForModal = async (): Promise<any[]> => {
-    try {
-      const params: any = {
-        limit: 10000, // Large number to get all products
-        status: 'active'
-      };
-      
-      const response = await productsApi.getAll(params);
-      
-      if (response.success) {
-        const productData = response.data.products || response.data || [];
-        return Array.isArray(productData) ? productData : [];
-      }
-      return [];
-    } catch (error) {
-      console.error('Failed to fetch all products for modal:', error);
-      return [];
-    }
-  };
-
-  if (loading && products.length === 0) {
-    return (
-      <div className="flex-1 p-6 space-y-6 min-h-screen bg-background no-horizontal-scroll">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-lg text-muted-foreground">Loading products...</div>
-        </div>
-      </div>
-    );
-  }
-
+const Dashboard: React.FC = () => {
   return (
-    <div className="flex-1 p-2 space-y-3 min-h-[calc(100vh-65px)] bg-background no-horizontal-scroll">
-      {/* HEADER AND BUTTONS: now stacked on small screens */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-        <div className="flex items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Products Management</h1>
-            <p className="text-muted-foreground">Manage your inventory and product catalog</p>
-          </div>
+    <div className="min-h-screen bg-theme-darker flex">
+      {/* Sidebar */}
+      <aside className="w-64 hidden md:block bg-theme-dark border-r border-gray-800 p-4 fixed h-screen overflow-y-auto">
+        <div className="mb-8 px-2">
+          <Link to="/" className="flex items-center">
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-theme-blue to-theme-purple">
+              ThemeMorphic
+            </span>
+          </Link>
         </div>
-        {/* The button group now stacks on sm, stays in-header on md+ */}
-        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto">
-          <Dialog open={isCategoryDialogOpen} onOpenChange={setIsCategoryDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Category
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Category</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="categoryName">Category Name</Label>
-                  <Input
-                    id="categoryName"
-                    value={newCategory}
-                    onChange={(e) => setNewCategory(e.target.value)}
-                    placeholder="Enter category name"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleAddCategory} className="flex-1">Add Category</Button>
-                  <Button variant="outline" onClick={() => setIsCategoryDialogOpen(false)}>Cancel</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-
-          <Button 
-            variant="outline" 
-            onClick={handlePdfExportClick}
-            disabled={exportLoading}
-            className="bg-red-600 hover:bg-red-700 text-white border-red-600 w-full sm:w-auto"
-          >
-            {exportLoading ? (
-              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-            ) : (
-              <FileText className="h-4 w-4 mr-2" />
-            )}
-            {exportLoading ? 'Exporting...' : 'PDF Export'}
+        
+        <nav className="space-y-1">
+          <NavItem href="/dashboard" icon={<Grid size={18} />} active>Dashboard</NavItem>
+          <NavItem href="/dashboard/themes" icon={<Bookmark size={18} />}>My Themes</NavItem>
+          <NavItem href="/dashboard/settings" icon={<Settings size={18} />}>Settings</NavItem>
+          <NavItem href="/dashboard/profile" icon={<User size={18} />}>Profile</NavItem>
+          <NavItem href="/dashboard/billing" icon={<CreditCard size={18} />}>Billing</NavItem>
+        </nav>
+        
+        <div className="border-t border-gray-800 mt-8 pt-8">
+          <Button variant="outline" className="w-full justify-start">
+            <LogOut className="mr-2 h-4 w-4" />
+            Log Out
           </Button>
-
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
-                <Plus className="h-4 w-4 mr-2" />
-                Add Product
-              </Button>
-            </DialogTrigger>
-            <ProductDialog 
-              onSubmit={handleAddProduct} 
-              onClose={() => setIsDialogOpen(false)} 
-              categories={categories} 
-              units={units}
-            />
-          </Dialog>
+        </div>
+      </aside>
+      
+      {/* Mobile Header */}
+      <div className="md:hidden fixed top-0 left-0 right-0 bg-theme-dark border-b border-gray-800 z-20">
+        <div className="flex items-center justify-between p-4">
+          <Link to="/" className="flex items-center">
+            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-theme-blue to-theme-purple">
+              ThemeMorphic
+            </span>
+          </Link>
+          <Button variant="outline" size="sm">
+            <Grid className="h-4 w-4" />
+          </Button>
         </div>
       </div>
-
-      {/* PDF Export Category Selection Dialog */}
-      <Dialog open={isPdfExportDialogOpen} onOpenChange={setIsPdfExportDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Select Export Category</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
+      
+      {/* Main Content */}
+      <main className="flex-1 md:ml-64 pt-16 md:pt-0">
+        <div className="container mx-auto px-4 py-8">
+          {/* Header */}
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
             <div>
-              <Label htmlFor="exportCategory">Choose which products to export:</Label>
-              <Select value={selectedExportCategory} onValueChange={setSelectedExportCategory}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <h1 className="text-2xl font-bold">Dashboard</h1>
+              <p className="text-gray-400">Welcome back, John!</p>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleConfirmPdfExport} className="flex-1" disabled={exportLoading}>
-                {exportLoading ? (
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                ) : (
-                  <FileText className="h-4 w-4 mr-2" />
-                )}
-                {exportLoading ? 'Exporting...' : 'Export PDF'}
+            <div className="mt-4 md:mt-0 flex items-center space-x-4">
+              <div className="relative">
+                <Bell className="h-5 w-5 text-gray-400" />
+                <span className="absolute top-0 right-0 w-2 h-2 bg-theme-purple rounded-full"></span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gray-700 rounded-full"></div>
+                <span>John Doe</span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[
+              { title: "Active Themes", value: "5", change: "+1 this month" },
+              { title: "Downloads", value: "256", change: "+24% from last month" },
+              { title: "Support Tickets", value: "2", change: "1 resolved, 1 open" },
+              { title: "Subscription", value: "Pro", change: "Renews in 240 days" }
+            ].map((stat, index) => (
+              <Card key={index} className="glass-card">
+                <CardContent className="p-6">
+                  <p className="text-gray-400 text-sm mb-1">{stat.title}</p>
+                  <p className="text-2xl font-bold mb-2">{stat.value}</p>
+                  <p className="text-xs text-gray-500">{stat.change}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          
+          {/* My Themes */}
+          <h2 className="text-xl font-semibold mb-4">My Themes</h2>
+          <div className="mb-8">
+            <div className="flex justify-between mb-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={16} />
+                <Input placeholder="Search themes..." className="pl-9 bg-theme-dark border-gray-700 w-64" />
+              </div>
+              <Button className="bg-gradient-to-r from-theme-blue to-theme-purple hover:opacity-90 transition-opacity">
+                New Theme
               </Button>
-              <Button variant="outline" onClick={() => setIsPdfExportDialogOpen(false)}>Cancel</Button>
             </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-        <Card className="border-l-4 border-l-blue-500 cursor-pointer hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Package className="h-8 w-8 text-blue-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Total Products</p>
-                <p className="text-2xl font-bold text-blue-600">{pagination.totalItems}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500 cursor-pointer hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Package className="h-8 w-8 text-green-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">In Stock</p>
-                <p className="text-2xl font-bold text-green-600">{products.filter(p => p.stock > p.minStock).length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-red-500 cursor-pointer hover:shadow-lg transition-shadow" onClick={() => openFilteredModal('lowStock', 'Low Stock Products')}>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <AlertTriangle className="h-8 w-8 text-red-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Low Stock</p>
-                <p className="text-2xl font-bold text-red-600">{lowStockProducts.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500 cursor-pointer hover:shadow-lg transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <Package className="h-8 w-8 text-purple-500" />
-              <div>
-                <p className="text-sm text-muted-foreground">Categories</p>
-                <p className="text-2xl font-bold text-purple-600">{categories.length - 1}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardContent className="p-2">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Search products by name or SKU..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger className="w-full md:w-64">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((category) => (
-                  <SelectItem key={category.value} value={category.value}>
-                    {category.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card className=" p-2">
-        <CardContent className="pb-1">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-lg text-muted-foreground">Loading...</div>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="text-lg text-muted-foreground">No products found</div>
-            </div>
-          ) : (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 overflow-y-auto">
-                {products.map((product) => (
-                  <Card key={product.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-medium text-foreground text-sm">{product.name}</h3>
-                            <p className="text-xs text-muted-foreground">SKU: {product.sku}</p>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Badge className={`text-xs ${getCategoryColor(product.category)}`}>
-                              {product.category}
-                            </Badge>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="h-6 w-6 p-0"
-                              onClick={() => openProductDetails(product)}
-                            >
-                              <Eye className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <span className="text-lg font-bold text-green-600">PKR {product.price?.toLocaleString()}</span>
-                          <span className="text-xs text-muted-foreground">per {product.unit}</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center">
-                          <Badge variant={product.stock <= product.minStock ? "destructive" : "default"}>
-                            {product.stock} {product.unit}s
-                          </Badge>
-                          {product.stock <= product.minStock && (
-                            <AlertTriangle className="h-4 w-4 text-red-500" />
-                          )}
-                        </div>
-                        
-                        <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="flex-1"
-                            onClick={() => openEditDialog(product)}
-                          >
-                            <Edit className="h-3 w-3 mr-1" />
-                            Edit
-                          </Button>
-                          <Button 
-                            size="sm" 
-                            variant="outline" 
-                            className="text-red-600 hover:text-red-700"
-                            onClick={() => handleDeleteProduct(product.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                { name: "Business Pro", type: "Business", lastModified: "2 days ago" },
+                { name: "Real Estate Modern", type: "Real Estate", lastModified: "1 week ago" },
+                { name: "Educational Platform", type: "Education", lastModified: "2 weeks ago" },
+                { name: "Tech Startup", type: "SaaS", lastModified: "1 month ago" },
+                { name: "Portfolio Minimal", type: "Portfolio", lastModified: "1 month ago" }
+              ].map((theme, index) => (
+                <Card key={index} className="glass-card hover:scale-105 transition-transform">
+                  <CardContent className="p-0">
+                    <div className="h-40 bg-gray-800 relative">
+                      <div className="absolute bottom-3 right-3">
+                        <Button variant="outline" size="sm">Preview</Button>
                       </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-
-              {pagination.totalPages > 1 && (
-                <div className="mt-6 flex justify-center">
-                  {renderPagination()}
+                    </div>
+                    <div className="p-4">
+                      <h3 className="font-medium mb-1">{theme.name}</h3>
+                      <p className="text-sm text-gray-400">{theme.type} Theme</p>
+                      <div className="flex items-center justify-between mt-4">
+                        <span className="text-xs text-gray-500">Modified {theme.lastModified}</span>
+                        <Button variant="ghost" size="sm">
+                          <Download className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          
+          {/* Activity & Support */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+            <Card className="glass-card">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Recent Activity</h3>
+                <div className="space-y-4">
+                  {[
+                    { action: "Downloaded Business Pro theme", time: "2 hours ago" },
+                    { action: "Created new theme", time: "2 days ago" },
+                    { action: "Renewed subscription", time: "1 week ago" },
+                    { action: "Support ticket resolved", time: "2 weeks ago" }
+                  ].map((activity, index) => (
+                    <div key={index} className="flex items-start">
+                      <div className="w-2 h-2 rounded-full bg-theme-blue mt-2 mr-3"></div>
+                      <div>
+                        <p className="text-sm">{activity.action}</p>
+                        <p className="text-xs text-gray-500">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              )}
-
-              <div className="mt-4 text-center text-sm text-muted-foreground">
-                Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of {pagination.totalItems} products
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
-
-      {selectedProduct && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <ProductDialog 
-            onSubmit={handleEditProduct} 
-            onClose={() => {
-              setIsEditDialogOpen(false);
-              setSelectedProduct(null);
-            }}
-            categories={categories}
-            units={units}
-            initialData={selectedProduct}
-            isEdit={true}
-          />
-        </Dialog>
-      )}
-
-      <FilteredProductsModal
-        open={filteredProductsModal.open}
-        onOpenChange={(open) => setFilteredProductsModal(prev => ({ ...prev, open }))}
-        title={filteredProductsModal.title}
-        filterType={filteredProductsModal.filterType}
-        onFetchAllProducts={fetchAllProductsForModal}
-      />
-
-      <ProductDetailsModal
-        open={productDetailsModal.open}
-        onOpenChange={(open) => setProductDetailsModal(prev => ({ ...prev, open }))}
-        product={productDetailsModal.product}
-      />
+              </CardContent>
+            </Card>
+            
+            <Card className="glass-card">
+              <CardContent className="p-6">
+                <h3 className="text-lg font-semibold mb-4">Support Tickets</h3>
+                <Tabs defaultValue="open">
+                  <TabsList className="mb-4">
+                    <TabsTrigger value="open">Open</TabsTrigger>
+                    <TabsTrigger value="resolved">Resolved</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="open">
+                    <div className="space-y-4">
+                      {[
+                        { title: "Issue with theme customization", priority: "High", created: "2 days ago" }
+                      ].map((ticket, index) => (
+                        <div key={index} className="p-3 bg-theme-dark rounded-lg">
+                          <div className="flex justify-between mb-1">
+                            <h4 className="font-medium">{ticket.title}</h4>
+                            <span className="bg-red-500/20 text-red-400 text-xs px-2 py-1 rounded">
+                              {ticket.priority}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">Created {ticket.created}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                  <TabsContent value="resolved">
+                    <div className="space-y-4">
+                      {[
+                        { title: "Payment issue resolved", priority: "Medium", resolved: "1 week ago" }
+                      ].map((ticket, index) => (
+                        <div key={index} className="p-3 bg-theme-dark rounded-lg">
+                          <div className="flex justify-between mb-1">
+                            <h4 className="font-medium">{ticket.title}</h4>
+                            <span className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded">
+                              Resolved
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500">Resolved {ticket.resolved}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
+                <Button variant="outline" className="w-full mt-4">
+                  Create New Ticket
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+          
+          {/* Recommended Themes */}
+          <h2 className="text-xl font-semibold mb-4">Recommended For You</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {[
+              { name: "E-commerce Essential", type: "E-commerce", popularity: "Trending" },
+              { name: "Blog Professional", type: "Blog", popularity: "Popular" },
+              { name: "Charity Plus", type: "Non-profit", popularity: "New" },
+              { name: "Restaurant Menu", type: "Food", popularity: "Best Seller" }
+            ].map((theme, index) => (
+              <Card key={index} className="glass-card">
+                <CardContent className="p-0">
+                  <div className="h-32 bg-gray-800 relative">
+                    <div className="absolute top-2 right-2 bg-theme-purple/80 text-xs font-medium py-1 px-2 rounded">
+                      {theme.popularity}
+                    </div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="font-medium text-sm mb-1">{theme.name}</h3>
+                    <p className="text-xs text-gray-400">{theme.type}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
 
-const ProductDialog = ({ 
-  onSubmit, 
-  onClose, 
-  categories, 
-  units,
-  initialData = null, 
-  isEdit = false 
-}: { 
-  onSubmit: (data: any) => void; 
-  onClose: () => void; 
-  categories: any[];
-  units: any[];
-  initialData?: any;
-  isEdit?: boolean;
-}) => {
-  const [formData, setFormData] = useState({
-    name: initialData?.name || "",
-    sku: initialData?.sku || "",
-    price: initialData?.price?.toString() || "",
-    stock: initialData?.stock?.toString() || "",
-    category: initialData?.category || "",
-    unit: initialData?.unit || "",
-    minStock: initialData?.minStock?.toString() || "",
-    description: initialData?.description || "",
-    costPrice: initialData?.costPrice?.toString() || "",
-    maxStock: initialData?.maxStock?.toString() || ""
-  });
+// Navigation Item Component
+const NavItem = ({ href, icon, children, active = false }) => (
+  <Link 
+    to={href}
+    className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+      active 
+        ? 'bg-theme-blue/10 text-theme-blue' 
+        : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+    }`}
+  >
+    <span className="mr-3">{icon}</span>
+    <span>{children}</span>
+  </Link>
+);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const submitData = {
-      ...formData,
-      price: parseFloat(formData.price),
-      stock: parseInt(formData.stock),
-      minStock: parseInt(formData.minStock),
-      costPrice: parseFloat(formData.costPrice),
-      maxStock: parseInt(formData.maxStock)
-    };
-    onSubmit(submitData);
-    if (!isEdit) {
-      setFormData({ 
-        name: "", sku: "", price: "", stock: "", category: "", 
-        unit: "", minStock: "", description: "", costPrice: "", maxStock: "" 
-      });
-    }
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => {
-      const newData = { ...prev, [field]: value };
-      
-      // Auto-generate SKU when name changes (only for new products)
-      if (field === 'name' && !isEdit) {
-        newData.sku = generateSKU(value);
-      }
-      
-      return newData;
-    });
-  };
-
-  const handleRegenerateSKU = () => {
-    if (formData.name) {
-      setFormData(prev => ({
-        ...prev,
-        sku: generateSKU(prev.name)
-      }));
-    }
-  };
-
-  return (
-    <DialogContent className="max-w-2xl">
-      <DialogHeader>
-        <DialogTitle>{isEdit ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-      </DialogHeader>
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="grid grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto">
-          <div>
-            <Label htmlFor="name">Product Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange('name', e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="sku">SKU {!isEdit && '(Auto-generated)'}</Label>
-            <div className="flex gap-1">
-              <Input
-                id="sku"
-                value={formData.sku}
-                onChange={(e) => handleInputChange('sku', e.target.value)}
-                placeholder={isEdit ? "Enter SKU" : "Auto-generated from name"}
-                required
-                className="flex-1"
-              />
-              {!isEdit && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleRegenerateSKU}
-                  disabled={!formData.name}
-                  className="px-2"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="price">Price (PKR)</Label>
-            <Input
-              id="price"
-              type="number"
-              value={formData.price}
-              onChange={(e) => handleInputChange('price', e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="costPrice">Cost Price (PKR)</Label>
-            <Input
-              id="costPrice"
-              type="number"
-              value={formData.costPrice}
-              onChange={(e) => handleInputChange('costPrice', e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="stock">Stock Quantity</Label>
-            <Input
-              id="stock"
-              type="number"
-              value={formData.stock}
-              onChange={(e) => handleInputChange('stock', e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="minStock">Minimum Stock</Label>
-            <Input
-              id="minStock"
-              type="number"
-              value={formData.minStock}
-              onChange={(e) => handleInputChange('minStock', e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <Label htmlFor="category">Category</Label>
-            <Select value={formData.category} onValueChange={(value) => handleInputChange('category', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.filter(cat => cat.value !== "all").map((category) => (
-                  <SelectItem key={category.value} value={category.value}>{category.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label htmlFor="unit">Unit</Label>
-            <Select value={formData.unit} onValueChange={(value) => handleInputChange('unit', value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select unit" />
-              </SelectTrigger>
-              <SelectContent>
-                {units.map((unit) => (
-                  <SelectItem key={unit.value || unit.name} value={unit.value || unit.name}>
-                    {unit.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="col-span-2">
-            <Label htmlFor="description">Description</Label>
-            <Input
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
-              placeholder="Enter product description"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-2 pt-4">
-          <Button type="submit" className="flex-1">
-            {isEdit ? 'Update Product' : 'Add Product'}
-          </Button>
-          <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
-        </div>
-      </form>
-    </DialogContent>
-  );
-};
-
-export default Products;
+export default Dashboard;
