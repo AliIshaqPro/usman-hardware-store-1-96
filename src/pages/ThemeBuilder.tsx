@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,7 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowRight, ArrowLeft, Palette, Type, Frame, Globe, 
-  MessageCircle, bot as Bot, magnet as Magnet, user as User
+  MessageCircle, Bot, Magnet, User
 } from 'lucide-react';
 
 const ThemeBuilder = () => {
