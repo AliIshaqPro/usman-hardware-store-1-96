@@ -309,34 +309,34 @@ const ThemeBuilder = () => {
   }, {} as Record<string, typeof features>);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 py-8 px-4">
+    <div className="min-h-screen bg-theme-darker py-8 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Progress Header */}
         <div className="mb-8">
           <div className="text-center mb-6">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+            <h1 className="text-4xl font-bold text-gradient mb-2">
               Custom Theme Builder
             </h1>
-            <p className="text-gray-600 text-lg">Create your perfect website theme with our advanced customization options</p>
+            <p className="text-muted-foreground text-lg">Create your perfect website theme with our advanced customization options</p>
           </div>
           
           <div className="flex justify-between items-center mb-4">
             {steps.map((step, index) => (
               <div key={step.number} className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}>
-                <div className={`flex flex-col items-center ${currentStep >= step.number ? 'text-blue-600' : 'text-gray-400'}`}>
+                <div className={`flex flex-col items-center ${currentStep >= step.number ? 'text-theme-blue' : 'text-muted-foreground'}`}>
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold mb-2 ${
-                    currentStep >= step.number ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+                    currentStep >= step.number ? 'bg-theme-blue text-white' : 'bg-muted text-muted-foreground'
                   }`}>
                     {step.number}
                   </div>
                   <div className="text-center">
                     <div className="font-medium text-sm">{step.title}</div>
-                    <div className="text-xs text-gray-500">{step.description}</div>
+                    <div className="text-xs text-muted-foreground">{step.description}</div>
                   </div>
                 </div>
                 {index < steps.length - 1 && (
                   <div className={`flex-1 h-1 mx-4 rounded ${
-                    currentStep > step.number ? 'bg-blue-600' : 'bg-gray-200'
+                    currentStep > step.number ? 'bg-theme-blue' : 'bg-border'
                   }`} />
                 )}
               </div>
@@ -347,19 +347,19 @@ const ThemeBuilder = () => {
         </div>
 
         {/* Form Content */}
-        <Card className="shadow-xl border-0 bg-white">
-          <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
+        <Card className="glass-card shadow-xl border-border">
+          <CardHeader className="bg-gradient-to-r from-theme-blue to-theme-purple text-white rounded-t-lg">
             <CardTitle className="text-2xl">{steps[currentStep - 1].title}</CardTitle>
             <CardDescription className="text-blue-100">{steps[currentStep - 1].description}</CardDescription>
           </CardHeader>
           
-          <CardContent className="p-8 bg-white">
+          <CardContent className="p-8">
             {/* Step 1: Basic Information */}
             {currentStep === 1 && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="websiteName" className="text-base font-semibold text-gray-700">Website Name *</Label>
+                    <Label htmlFor="websiteName" className="text-base font-semibold text-foreground">Website Name *</Label>
                     <Input
                       id="websiteName"
                       value={formData.websiteName}
@@ -369,12 +369,12 @@ const ThemeBuilder = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="websiteType" className="text-base font-semibold text-gray-700">Website Type *</Label>
+                    <Label htmlFor="websiteType" className="text-base font-semibold text-foreground">Website Type *</Label>
                     <Select onValueChange={(value) => handleInputChange('websiteType', value)}>
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Select website type" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white">
+                      <SelectContent>
                         <SelectItem value="business">Business/Corporate</SelectItem>
                         <SelectItem value="portfolio">Portfolio</SelectItem>
                         <SelectItem value="blog">Blog/News</SelectItem>
@@ -390,12 +390,12 @@ const ThemeBuilder = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="industry" className="text-base font-semibold text-gray-700">Industry *</Label>
+                    <Label htmlFor="industry" className="text-base font-semibold text-foreground">Industry *</Label>
                     <Select onValueChange={(value) => handleInputChange('industry', value)}>
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Select your industry" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white max-h-60 overflow-y-auto">
+                      <SelectContent className="max-h-60 overflow-y-auto">
                         {industries.map((industry) => (
                           <SelectItem key={industry} value={industry.toLowerCase().replace(/\s+/g, '-')}>
                             {industry}
@@ -405,7 +405,7 @@ const ThemeBuilder = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="targetAudience" className="text-base font-semibold text-gray-700">Target Audience</Label>
+                    <Label htmlFor="targetAudience" className="text-base font-semibold text-foreground">Target Audience</Label>
                     <Input
                       id="targetAudience"
                       value={formData.targetAudience}
@@ -417,13 +417,13 @@ const ThemeBuilder = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="businessDescription" className="text-base font-semibold text-gray-700">Business Description</Label>
+                  <Label htmlFor="businessDescription" className="text-base font-semibold text-foreground">Business Description</Label>
                   <textarea
                     id="businessDescription"
                     value={formData.businessDescription}
                     onChange={(e) => handleInputChange('businessDescription', e.target.value)}
                     placeholder="Briefly describe your business and what you do..."
-                    className="w-full mt-2 p-3 border border-gray-300 rounded-md resize-none h-24 bg-white"
+                    className="w-full mt-2 p-3 border border-border rounded-md resize-none h-24 bg-background text-foreground"
                   />
                 </div>
               </div>
@@ -433,31 +433,31 @@ const ThemeBuilder = () => {
             {currentStep === 2 && (
               <div className="space-y-8">
                 <div>
-                  <Label className="text-base font-semibold mb-4 block text-gray-700">Design Style *</Label>
+                  <Label className="text-base font-semibold mb-4 block text-foreground">Design Style *</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {designStyles.map((style) => (
                       <div
                         key={style.name}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md bg-white ${
-                          formData.designStyle === style.name ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                          formData.designStyle === style.name ? 'border-theme-blue bg-theme-blue/10' : 'border-border bg-card'
                         }`}
                         onClick={() => handleInputChange('designStyle', style.name)}
                       >
-                        <h3 className="font-semibold text-sm mb-1 text-gray-800">{style.name}</h3>
-                        <p className="text-xs text-gray-600">{style.description}</p>
+                        <h3 className="font-semibold text-sm mb-1 text-foreground">{style.name}</h3>
+                        <p className="text-xs text-muted-foreground">{style.description}</p>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-base font-semibold mb-4 block text-gray-700">Color Scheme *</Label>
+                  <Label className="text-base font-semibold mb-4 block text-foreground">Color Scheme *</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {colorSchemes.map((scheme) => (
                       <div
                         key={scheme.name}
-                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md bg-white ${
-                          formData.colorScheme === scheme.name ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                          formData.colorScheme === scheme.name ? 'border-theme-blue bg-theme-blue/10' : 'border-border bg-card'
                         }`}
                         onClick={() => handleInputChange('colorScheme', scheme.name)}
                       >
@@ -470,25 +470,25 @@ const ThemeBuilder = () => {
                             />
                           ))}
                         </div>
-                        <h3 className="font-semibold text-sm text-gray-800">{scheme.name}</h3>
+                        <h3 className="font-semibold text-sm text-foreground">{scheme.name}</h3>
                       </div>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <Label className="text-base font-semibold mb-4 block text-gray-700">Font Pairing *</Label>
+                  <Label className="text-base font-semibold mb-4 block text-foreground">Font Pairing *</Label>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {fontPairings.map((pairing) => (
                       <div
                         key={pairing.name}
-                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md bg-white ${
-                          formData.fontPairing === pairing.name ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                        className={`p-4 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md ${
+                          formData.fontPairing === pairing.name ? 'border-theme-blue bg-theme-blue/10' : 'border-border bg-card'
                         }`}
                         onClick={() => handleInputChange('fontPairing', pairing.name)}
                       >
-                        <h3 className="font-semibold text-sm mb-2 text-gray-800">{pairing.name}</h3>
-                        <div className="text-xs text-gray-600">
+                        <h3 className="font-semibold text-sm mb-2 text-foreground">{pairing.name}</h3>
+                        <div className="text-xs text-muted-foreground">
                           <div>Heading: {pairing.heading}</div>
                           <div>Body: {pairing.body}</div>
                         </div>
@@ -503,12 +503,12 @@ const ThemeBuilder = () => {
             {currentStep === 3 && (
               <div className="space-y-6">
                 <div className="text-center mb-6">
-                  <h3 className="text-lg font-semibold mb-2 text-gray-800">Select the features you need for your website</h3>
-                  <p className="text-gray-600">Choose from our comprehensive list of features organized by category</p>
+                  <h3 className="text-lg font-semibold mb-2 text-foreground">Select the features you need for your website</h3>
+                  <p className="text-muted-foreground">Choose from our comprehensive list of features organized by category</p>
                 </div>
 
                 <Tabs defaultValue="Core" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-gray-100">
+                  <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8">
                     {Object.keys(groupedFeatures).slice(0, 8).map((category) => (
                       <TabsTrigger key={category} value={category} className="text-xs">
                         {category}
@@ -520,14 +520,14 @@ const ThemeBuilder = () => {
                     <TabsContent key={category} value={category} className="mt-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                         {features.map((feature) => (
-                          <div key={feature.name} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 bg-white">
+                          <div key={feature.name} className="flex items-center space-x-3 p-3 border border-border rounded-lg hover:bg-muted/50 bg-card">
                             <Checkbox
                               id={feature.name}
                               checked={formData.selectedFeatures.includes(feature.name)}
                               onCheckedChange={() => handleCheckboxChange('selectedFeatures', feature.name)}
                             />
-                            <feature.icon size={16} className="text-blue-600" />
-                            <Label htmlFor={feature.name} className="text-sm font-medium cursor-pointer flex-1 text-gray-700">
+                            <feature.icon size={16} className="text-theme-blue" />
+                            <Label htmlFor={feature.name} className="text-sm font-medium cursor-pointer flex-1 text-foreground">
                               {feature.name}
                             </Label>
                           </div>
@@ -539,7 +539,7 @@ const ThemeBuilder = () => {
 
                 {/* Additional Categories */}
                 <div className="mt-8">
-                  <h4 className="text-md font-semibold mb-4 text-gray-700">Additional Categories</h4>
+                  <h4 className="text-md font-semibold mb-4 text-foreground">Additional Categories</h4>
                   <Tabs defaultValue={Object.keys(groupedFeatures)[8]} className="w-full">
                     <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6">
                       {Object.keys(groupedFeatures).slice(8).map((category) => (
@@ -553,14 +553,14 @@ const ThemeBuilder = () => {
                       <TabsContent key={category} value={category} className="mt-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                           {features.map((feature) => (
-                            <div key={feature.name} className="flex items-center space-x-3 p-3 border rounded-lg hover:bg-gray-50 bg-white">
+                            <div key={feature.name} className="flex items-center space-x-3 p-3 border border-border rounded-lg hover:bg-muted/50 bg-card">
                               <Checkbox
                                 id={feature.name}
                                 checked={formData.selectedFeatures.includes(feature.name)}
                                 onCheckedChange={() => handleCheckboxChange('selectedFeatures', feature.name)}
                               />
-                              <feature.icon size={16} className="text-blue-600" />
-                              <Label htmlFor={feature.name} className="text-sm font-medium cursor-pointer flex-1 text-gray-700">
+                              <feature.icon size={16} className="text-theme-blue" />
+                              <Label htmlFor={feature.name} className="text-sm font-medium cursor-pointer flex-1 text-foreground">
                                 {feature.name}
                               </Label>
                             </div>
@@ -571,16 +571,16 @@ const ThemeBuilder = () => {
                   </Tabs>
                 </div>
 
-                <div className="mt-6 p-4 bg-blue-50 rounded-lg border">
-                  <h4 className="font-semibold text-blue-900 mb-2">Selected Features</h4>
+                <div className="mt-6 p-4 bg-theme-blue/10 rounded-lg border border-theme-blue/20">
+                  <h4 className="font-semibold text-theme-blue mb-2">Selected Features</h4>
                   <div className="flex flex-wrap gap-2">
                     {formData.selectedFeatures.map((feature) => (
-                      <Badge key={feature} variant="secondary" className="bg-blue-100 text-blue-800">
+                      <Badge key={feature} variant="secondary" className="bg-theme-blue/20 text-theme-blue">
                         {feature}
                       </Badge>
                     ))}
                     {formData.selectedFeatures.length === 0 && (
-                      <p className="text-blue-700 text-sm">No features selected yet</p>
+                      <p className="text-muted-foreground text-sm">No features selected yet</p>
                     )}
                   </div>
                 </div>
@@ -591,17 +591,17 @@ const ThemeBuilder = () => {
             {currentStep === 4 && (
               <div className="space-y-8">
                 <div>
-                  <Label className="text-base font-semibold mb-4 block text-gray-700">Layout Style *</Label>
+                  <Label className="text-base font-semibold mb-4 block text-foreground">Layout Style *</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                     {layoutStyles.map((style) => (
                       <div
                         key={style}
-                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md text-center bg-white ${
-                          formData.layoutStyle === style ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                        className={`p-3 border-2 rounded-lg cursor-pointer transition-all hover:shadow-md text-center ${
+                          formData.layoutStyle === style ? 'border-theme-blue bg-theme-blue/10' : 'border-border bg-card'
                         }`}
                         onClick={() => handleInputChange('layoutStyle', style)}
                       >
-                        <span className="text-sm font-medium text-gray-700">{style}</span>
+                        <span className="text-sm font-medium text-foreground">{style}</span>
                       </div>
                     ))}
                   </div>
@@ -609,51 +609,51 @@ const ThemeBuilder = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <Label className="text-base font-semibold mb-4 block text-gray-700">Header Style</Label>
+                    <Label className="text-base font-semibold mb-4 block text-foreground">Header Style</Label>
                     <div className="space-y-2">
                       {headerStyles.map((style) => (
                         <div
                           key={style}
-                          className={`p-2 border rounded cursor-pointer text-sm transition-all hover:shadow-sm bg-white ${
-                            formData.headerStyle === style ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                          className={`p-2 border rounded cursor-pointer text-sm transition-all hover:shadow-sm ${
+                            formData.headerStyle === style ? 'border-theme-blue bg-theme-blue/10' : 'border-border bg-card'
                           }`}
                           onClick={() => handleInputChange('headerStyle', style)}
                         >
-                          <span className="text-gray-700">{style}</span>
+                          <span className="text-foreground">{style}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-base font-semibold mb-4 block text-gray-700">Footer Style</Label>
+                    <Label className="text-base font-semibold mb-4 block text-foreground">Footer Style</Label>
                     <div className="space-y-2">
                       {footerStyles.map((style) => (
                         <div
                           key={style}
-                          className={`p-2 border rounded cursor-pointer text-sm transition-all hover:shadow-sm bg-white ${
-                            formData.footerStyle === style ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                          className={`p-2 border rounded cursor-pointer text-sm transition-all hover:shadow-sm ${
+                            formData.footerStyle === style ? 'border-theme-blue bg-theme-blue/10' : 'border-border bg-card'
                           }`}
                           onClick={() => handleInputChange('footerStyle', style)}
                         >
-                          <span className="text-gray-700">{style}</span>
+                          <span className="text-foreground">{style}</span>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <Label className="text-base font-semibold mb-4 block text-gray-700">Animation Style</Label>
+                    <Label className="text-base font-semibold mb-4 block text-foreground">Animation Style</Label>
                     <div className="space-y-2">
                       {animationStyles.map((style) => (
                         <div
                           key={style}
-                          className={`p-2 border rounded cursor-pointer text-sm transition-all hover:shadow-sm bg-white ${
-                            formData.animationStyle === style ? 'border-blue-600 bg-blue-50' : 'border-gray-200'
+                          className={`p-2 border rounded cursor-pointer text-sm transition-all hover:shadow-sm ${
+                            formData.animationStyle === style ? 'border-theme-blue bg-theme-blue/10' : 'border-border bg-card'
                           }`}
                           onClick={() => handleInputChange('animationStyle', style)}
                         >
-                          <span className="text-gray-700">{style}</span>
+                          <span className="text-foreground">{style}</span>
                         </div>
                       ))}
                     </div>
@@ -661,17 +661,17 @@ const ThemeBuilder = () => {
                 </div>
 
                 <div>
-                  <Label className="text-base font-semibold mb-4 block text-gray-700">Content Sections</Label>
-                  <p className="text-gray-600 text-sm mb-4">Select the sections you want to include on your website</p>
+                  <Label className="text-base font-semibold mb-4 block text-foreground">Content Sections</Label>
+                  <p className="text-muted-foreground text-sm mb-4">Select the sections you want to include on your website</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
                     {contentSections.map((section) => (
-                      <div key={section} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50 bg-white">
+                      <div key={section} className="flex items-center space-x-2 p-2 border border-border rounded hover:bg-muted/50 bg-card">
                         <Checkbox
                           id={section}
                           checked={formData.contentSections.includes(section)}
                           onCheckedChange={() => handleCheckboxChange('contentSections', section)}
                         />
-                        <Label htmlFor={section} className="text-sm cursor-pointer text-gray-700">
+                        <Label htmlFor={section} className="text-sm cursor-pointer text-foreground">
                           {section}
                         </Label>
                       </div>
@@ -686,17 +686,17 @@ const ThemeBuilder = () => {
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="goals" className="text-base font-semibold text-gray-700">Website Goals</Label>
+                    <Label htmlFor="goals" className="text-base font-semibold text-foreground">Website Goals</Label>
                     <textarea
                       id="goals"
                       value={formData.goals}
                       onChange={(e) => handleInputChange('goals', e.target.value)}
                       placeholder="What do you want to achieve with your website?"
-                      className="w-full mt-2 p-3 border border-gray-300 rounded-md resize-none h-20 bg-white"
+                      className="w-full mt-2 p-3 border border-border rounded-md resize-none h-20 bg-background text-foreground"
                     />
                   </div>
                   <div>
-                    <Label htmlFor="brandColors" className="text-base font-semibold text-gray-700">Brand Colors (if any)</Label>
+                    <Label htmlFor="brandColors" className="text-base font-semibold text-foreground">Brand Colors (if any)</Label>
                     <Input
                       id="brandColors"
                       value={formData.brandColors}
@@ -709,12 +709,12 @@ const ThemeBuilder = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="budget" className="text-base font-semibold text-gray-700">Budget Range</Label>
+                    <Label htmlFor="budget" className="text-base font-semibold text-foreground">Budget Range</Label>
                     <Select onValueChange={(value) => handleInputChange('budget', value)}>
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Select budget range" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white">
+                      <SelectContent>
                         <SelectItem value="under-1000">Under $1,000</SelectItem>
                         <SelectItem value="1000-5000">$1,000 - $5,000</SelectItem>
                         <SelectItem value="5000-10000">$5,000 - $10,000</SelectItem>
@@ -724,12 +724,12 @@ const ThemeBuilder = () => {
                     </Select>
                   </div>
                   <div>
-                    <Label htmlFor="timeline" className="text-base font-semibold text-gray-700">Timeline</Label>
+                    <Label htmlFor="timeline" className="text-base font-semibold text-foreground">Timeline</Label>
                     <Select onValueChange={(value) => handleInputChange('timeline', value)}>
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Select timeline" />
                       </SelectTrigger>
-                      <SelectContent className="bg-white">
+                      <SelectContent>
                         <SelectItem value="asap">ASAP</SelectItem>
                         <SelectItem value="1-month">Within 1 month</SelectItem>
                         <SelectItem value="3-months">Within 3 months</SelectItem>
@@ -741,16 +741,16 @@ const ThemeBuilder = () => {
                 </div>
 
                 <div>
-                  <Label className="text-base font-semibold mb-4 block text-gray-700">Social Media Platforms</Label>
+                  <Label className="text-base font-semibold mb-4 block text-foreground">Social Media Platforms</Label>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
                     {socialPlatforms.map((platform) => (
-                      <div key={platform} className="flex items-center space-x-2 p-2 border rounded hover:bg-gray-50 bg-white">
+                      <div key={platform} className="flex items-center space-x-2 p-2 border border-border rounded hover:bg-muted/50 bg-card">
                         <Checkbox
                           id={platform}
                           checked={formData.socialMedia.includes(platform)}
                           onCheckedChange={() => handleCheckboxChange('socialMedia', platform)}
                         />
-                        <Label htmlFor={platform} className="text-sm cursor-pointer text-gray-700">
+                        <Label htmlFor={platform} className="text-sm cursor-pointer text-foreground">
                           {platform}
                         </Label>
                       </div>
@@ -760,7 +760,7 @@ const ThemeBuilder = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <Label htmlFor="existingWebsite" className="text-base font-semibold text-gray-700">Existing Website (if any)</Label>
+                    <Label htmlFor="existingWebsite" className="text-base font-semibold text-foreground">Existing Website (if any)</Label>
                     <Input
                       id="existingWebsite"
                       value={formData.existingWebsite}
@@ -770,7 +770,7 @@ const ThemeBuilder = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="contactInfo" className="text-base font-semibold text-gray-700">Contact Information</Label>
+                    <Label htmlFor="contactInfo" className="text-base font-semibold text-foreground">Contact Information</Label>
                     <Input
                       id="contactInfo"
                       value={formData.contactInfo}
@@ -782,40 +782,40 @@ const ThemeBuilder = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="additionalRequirements" className="text-base font-semibold text-gray-700">Additional Requirements</Label>
+                  <Label htmlFor="additionalRequirements" className="text-base font-semibold text-foreground">Additional Requirements</Label>
                   <textarea
                     id="additionalRequirements"
                     value={formData.additionalRequirements}
                     onChange={(e) => handleInputChange('additionalRequirements', e.target.value)}
                     placeholder="Any specific requirements, features, or preferences not covered above..."
-                    className="w-full mt-2 p-3 border border-gray-300 rounded-md resize-none h-24 bg-white"
+                    className="w-full mt-2 p-3 border border-border rounded-md resize-none h-24 bg-background text-foreground"
                   />
                 </div>
 
                 {/* Summary Card */}
-                <div className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border">
-                  <h3 className="text-lg font-semibold mb-4 text-blue-900">Theme Summary</h3>
+                <div className="mt-8 p-6 bg-gradient-to-r from-theme-blue/10 to-theme-purple/10 rounded-lg border border-theme-blue/20">
+                  <h3 className="text-lg font-semibold mb-4 text-theme-blue">Theme Summary</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                     <div>
-                      <span className="font-medium text-gray-700">Website:</span> <span className="text-gray-600">{formData.websiteName || 'Not specified'}</span>
+                      <span className="font-medium text-foreground">Website:</span> <span className="text-muted-foreground">{formData.websiteName || 'Not specified'}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Type:</span> <span className="text-gray-600">{formData.websiteType || 'Not specified'}</span>
+                      <span className="font-medium text-foreground">Type:</span> <span className="text-muted-foreground">{formData.websiteType || 'Not specified'}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Industry:</span> <span className="text-gray-600">{formData.industry || 'Not specified'}</span>
+                      <span className="font-medium text-foreground">Industry:</span> <span className="text-muted-foreground">{formData.industry || 'Not specified'}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Design Style:</span> <span className="text-gray-600">{formData.designStyle || 'Not specified'}</span>
+                      <span className="font-medium text-foreground">Design Style:</span> <span className="text-muted-foreground">{formData.designStyle || 'Not specified'}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Color Scheme:</span> <span className="text-gray-600">{formData.colorScheme || 'Not specified'}</span>
+                      <span className="font-medium text-foreground">Color Scheme:</span> <span className="text-muted-foreground">{formData.colorScheme || 'Not specified'}</span>
                     </div>
                     <div>
-                      <span className="font-medium text-gray-700">Font Pairing:</span> <span className="text-gray-600">{formData.fontPairing || 'Not specified'}</span>
+                      <span className="font-medium text-foreground">Font Pairing:</span> <span className="text-muted-foreground">{formData.fontPairing || 'Not specified'}</span>
                     </div>
                     <div className="md:col-span-2">
-                      <span className="font-medium text-gray-700">Features:</span> <span className="text-gray-600">{formData.selectedFeatures.length} selected</span>
+                      <span className="font-medium text-foreground">Features:</span> <span className="text-muted-foreground">{formData.selectedFeatures.length} selected</span>
                     </div>
                   </div>
                 </div>
@@ -823,7 +823,7 @@ const ThemeBuilder = () => {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between mt-8 pt-6 border-t">
+            <div className="flex justify-between mt-8 pt-6 border-t border-border">
               <Button
                 onClick={prevStep}
                 disabled={currentStep === 1}
@@ -837,14 +837,14 @@ const ThemeBuilder = () => {
               {currentStep < 5 ? (
                 <Button
                   onClick={nextStep}
-                  className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-theme-blue to-theme-purple hover:from-theme-blue/80 hover:to-theme-purple/80"
                 >
                   <span>Next</span>
                   <ArrowRight size={16} />
                 </Button>
               ) : (
                 <Button
-                  className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
+                  className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-theme-blue hover:from-green-700 hover:to-theme-blue/80"
                   onClick={() => {
                     console.log('Theme Configuration:', formData);
                     // Here you would typically submit the form data
