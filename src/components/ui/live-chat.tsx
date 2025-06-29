@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +20,10 @@ const initialMessages: Message[] = [
     timestamp: new Date(),
   },
 ];
+
+// Gemini API configuration
+const GEMINI_API_KEY = "AIzaSyDscgxHRLCy4suVBigT1g_pXMnE7tH_Ejw";
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
 
 export const LiveChat = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -47,7 +50,126 @@ export const LiveChat = () => {
     return () => clearTimeout(checkChatVisible);
   }, []);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
+  const callGeminiAPI = async (userMessage: string, conversationHistory: Message[]): Promise<string> => {
+    try {
+      // Create conversation context for Gemini
+      const conversationContext = conversationHistory
+        .map(msg => `${msg.sender === 'user' ? 'User' : 'ThemeMorphic Bot'}: ${msg.text}`)
+        .join('\n');
+
+      const prompt = `You are a ThemeMorphic bot, a helpful AI assistant for ThemeMorphic - a revolutionary WordPress theme builder platform.
+
+COMPREHENSIVE THEMEMORPHIC INFORMATION:
+
+COMPANY OVERVIEW:
+- ThemeMorphic is building the future of WordPress themes with speed, simplicity, and performance in mind
+- We're on a mission to revolutionize WordPress themes by making them fast, lightweight, and easy to customize
+- Our platform empowers businesses and developers to create custom WordPress themes in minutes, not weeks
+- We save time and resources while delivering exceptional results
+
+CORE VALUES:
+1. Speed - We prioritize performance in everything we do, ensuring lightning-fast websites that users love
+2. Simplicity - Complex doesn't mean better. We focus on intuitive designs and user experiences that just work
+3. Innovation - We're constantly pushing boundaries to bring the latest web technologies to WordPress themes
+
+PRODUCT FEATURES:
+- Over 50 professionally designed theme templates across various industries
+- Advanced theme builder with drag-and-drop functionality
+- Extensive customization options including colors, fonts, layouts, and features
+- Lightning-fast performance optimized themes
+- Mobile-responsive designs
+- SEO-optimized structure
+- WordPress compatibility and easy integration
+- Real-time preview and editing
+- One-click theme installation
+
+PRICING & LICENSING:
+- Themes start at $49 for a single site license
+- Multiple licensing options available (single site, multiple sites, developer licenses)
+- 30-day money-back guarantee if not satisfied
+- No hidden fees or recurring charges
+- Free updates and support included
+
+TEAM & SUPPORT:
+- CEO & Founder: Alex Morgan
+- Lead Developer: Jordan Lee
+- Design Lead: Taylor Kim
+- Marketing Director: Casey Chen
+- Professional support team available
+- Comprehensive documentation and tutorials
+- Community forum for users
+
+TECHNICAL SPECIFICATIONS:
+- Built with modern web technologies
+- Optimized for WordPress 6.0+
+- Compatible with major browsers
+- Fast loading times (< 2 seconds)
+- Clean, semantic code
+- Accessibility compliant
+- GDPR ready
+
+USE CASES:
+- Business websites
+- E-commerce stores
+- Portfolio sites
+- Blog platforms
+- Corporate websites
+- Personal branding
+- Agency client projects
+- Developer projects
+
+Previous conversation:
+${conversationContext}
+
+Current user message: ${userMessage}
+
+RESPONSE GUIDELINES:
+- Respond as the ThemeMorphic bot in a helpful, friendly, and professional manner
+- Keep responses concise but informative (2-4 sentences typically)
+- Always mention ThemeMorphic's key benefits when relevant
+- If asked about pricing, mention the $49 starting price and 30-day guarantee
+- If asked about features, highlight speed, simplicity, and customization options
+- If asked about support, mention our team and 30-day guarantee
+- If the user asks about something not related to ThemeMorphic, politely redirect them to ThemeMorphic-related topics
+- Use emojis sparingly but appropriately to maintain a friendly tone
+- Always encourage users to try our theme builder or contact support for specific needs`;
+
+      const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+        return data.candidates[0].content.parts[0].text.trim();
+      } else {
+        throw new Error('Invalid response format from Gemini API');
+      }
+    } catch (error) {
+      console.error('Error calling Gemini API:', error);
+      return "I apologize, but I'm having trouble connecting to our AI service right now. Please try again in a moment, or contact our support team directly.";
+    }
+  };
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
     if (!newMessage.trim()) return;
@@ -61,47 +183,50 @@ export const LiveChat = () => {
     };
     
     setMessages((prev) => [...prev, userMessage]);
+    const currentMessage = newMessage;
     setNewMessage("");
     
     // Show typing indicator
     setIsTyping(true);
     
-    // Simulate response after delay
-    setTimeout(() => {
+    try {
+      // Get response from Gemini API
+      const response = await callGeminiAPI(currentMessage, messages);
+      
       const supportMessage: Message = {
         id: messages.length + 2,
-        text: getAutoResponse(newMessage),
+        text: response,
         sender: "support",
         timestamp: new Date(),
       };
+      
       setMessages((prev) => [...prev, supportMessage]);
-      setIsTyping(false);
       
       // Show toast notification
       toast({
         title: "New Message",
-        description: "Support team has responded to your query",
+        description: "ThemeMorphic AI has responded to your query",
       });
-    }, 1500);
-  };
-
-  const getAutoResponse = (message: string): string => {
-    const lowerMessage = message.toLowerCase();
-    
-    if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
-      return "Hello there! How can I assist you with ThemeMorphic today?";
-    } else if (lowerMessage.includes("price") || lowerMessage.includes("cost") || lowerMessage.includes("pricing")) {
-      return "Our themes start at $49 for a single site license. You can check our full pricing at the pricing page.";
-    } else if (lowerMessage.includes("theme") || lowerMessage.includes("templates")) {
-      return "We have over 50 theme designs available across various industries. You can customize any of them in our Theme Builder.";
-    } else if (lowerMessage.includes("refund") || lowerMessage.includes("money back")) {
-      return "We offer a 30-day money-back guarantee if you're not satisfied with your purchase.";
-    } else if (lowerMessage.includes("help") || lowerMessage.includes("support")) {
-      return "I'm happy to help! What specific aspect of our theme builder do you need assistance with?";
-    } else if (lowerMessage.includes("custom") || lowerMessage.includes("customize")) {
-      return "Our theme builder allows extensive customization including colors, fonts, layouts and features. Would you like me to walk you through the options?";
-    } else {
-      return "Thanks for your message! Our team will get back to you within 24 hours. If you need immediate assistance, please check our FAQ section or continue the conversation here.";
+    } catch (error) {
+      console.error('Error in handleSendMessage:', error);
+      
+      // Fallback response
+      const fallbackMessage: Message = {
+        id: messages.length + 2,
+        text: "I apologize, but I'm having trouble processing your request right now. Please try again in a moment.",
+        sender: "support",
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, fallbackMessage]);
+      
+      toast({
+        title: "Connection Error",
+        description: "Unable to connect to AI service. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsTyping(false);
     }
   };
 

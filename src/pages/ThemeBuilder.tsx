@@ -1340,7 +1340,9 @@ const ThemeBuilder = () => {
           </CardContent>
         </Card>
       </div>
+      
     </div>
+    
   );
 };
 
