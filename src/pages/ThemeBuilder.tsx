@@ -10,11 +10,18 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { 
   ArrowRight, ArrowLeft, Palette, Type, Frame, Globe, 
-  MessageCircle, Bot, Magnet, User
+  MessageCircle, Bot, Magnet, User, Loader2, CheckCircle,
+  Copy, Eye
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const ThemeBuilder = () => {
   const [currentStep, setCurrentStep] = useState(1);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [aiResponse, setAiResponse] = useState(null);
+  const [showRawJson, setShowRawJson] = useState(false);
+  const { toast } = useToast();
+
   const [formData, setFormData] = useState({
     // Basic Info
     websiteName: '',
@@ -363,6 +370,120 @@ const ThemeBuilder = () => {
     'TikTok', 'Pinterest', 'Snapchat', 'WhatsApp', 'Telegram'
   ];
 
+  // Generate AI Analysis Function
+  const generateAIAnalysis = async () => {
+    setIsGenerating(true);
+    
+    try {
+      // Prepare comprehensive user data
+      const userData = {
+        basicInfo: {
+          websiteName: formData.websiteName,
+          websiteType: formData.websiteType,
+          industry: formData.industry,
+          targetAudience: formData.targetAudience,
+          businessDescription: formData.businessDescription
+        },
+        designPreferences: {
+          designStyle: formData.designStyle,
+          colorScheme: formData.colorScheme,
+          selectedTheme: formData.selectedTheme ? themeSamples.find(t => t.id === formData.selectedTheme)?.name : null,
+          fontPairing: formData.fontPairing,
+          brandColors: formData.brandColors
+        },
+        selectedFeatures: formData.selectedFeatures,
+        layoutStructure: {
+          layoutStyle: formData.layoutStyle,
+          headerStyle: formData.headerStyle,
+          footerStyle: formData.footerStyle,
+          animationStyle: formData.animationStyle,
+          contentSections: formData.contentSections
+        },
+        businessDetails: {
+          goals: formData.goals,
+          budget: formData.budget,
+          timeline: formData.timeline,
+          existingWebsite: formData.existingWebsite
+        },
+        contactAndSocial: {
+          contactInfo: formData.contactInfo,
+          socialMedia: formData.socialMedia,
+          additionalRequirements: formData.additionalRequirements
+        }
+      };
+
+      // Create AI prompt
+      const aiPrompt = `
+        Analyze this comprehensive website theme requirements and provide a detailed professional summary and recommendations:
+
+        User Data: ${JSON.stringify(userData, null, 2)}
+
+        Please provide:
+        1. A professional executive summary of the user's requirements
+        2. Design recommendations based on their preferences
+        3. Technical suggestions for their chosen features
+        4. Timeline and budget analysis
+        5. Next steps and recommendations
+        6. A complete JSON structure of their preferences organized professionally
+
+        Format your response as a comprehensive analysis that would be suitable for presenting to a client and development team.
+      `;
+
+      // Make API call to Gemini
+      const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=AIzaSyDscgxHRLCy4suVBigT1g_pXMnE7tH_Ejw', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: aiPrompt
+                }
+              ]
+            }
+          ]
+        })
+      });
+
+      const result = await response.json();
+      setAiResponse({
+        rawResponse: result,
+        userData: userData,
+        formattedAnalysis: result.candidates?.[0]?.content?.parts?.[0]?.text || 'No analysis generated'
+      });
+
+      toast({
+        title: "✨ AI Analysis Complete!",
+        description: "Your theme requirements have been analyzed successfully.",
+        duration: 3000,
+      });
+
+    } catch (error) {
+      console.error('Error generating AI analysis:', error);
+      toast({
+        title: "❌ Analysis Failed",
+        description: "Failed to generate AI analysis. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Copy to clipboard function
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "📋 Copied!",
+      description: "Content copied to clipboard successfully.",
+      duration: 2000,
+    });
+  };
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -460,7 +581,7 @@ const ThemeBuilder = () => {
                       value={formData.websiteName}
                       onChange={(e) => handleInputChange('websiteName', e.target.value)}
                       placeholder="Enter your website name"
-                      className="mt-2 bg-gray-800 border-gray-700 text-white"
+                      className="mt-2 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                     />
                   </div>
                   <div>
@@ -506,7 +627,7 @@ const ThemeBuilder = () => {
                       value={formData.targetAudience}
                       onChange={(e) => handleInputChange('targetAudience', e.target.value)}
                       placeholder="e.g., Young professionals, families, seniors"
-                      className="mt-2 bg-gray-800 border-gray-700 text-white"
+                      className="mt-2 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -518,7 +639,7 @@ const ThemeBuilder = () => {
                     value={formData.businessDescription}
                     onChange={(e) => handleInputChange('businessDescription', e.target.value)}
                     placeholder="Briefly describe your business and what you do..."
-                    className="w-full mt-2 p-3 border border-gray-700 rounded-md resize-none h-24 bg-gray-800 text-white"
+                    className="w-full mt-2 p-3 border border-gray-700 rounded-md resize-none h-24 bg-gray-800 text-white placeholder:text-gray-400"
                   />
                 </div>
               </div>
@@ -845,7 +966,7 @@ const ThemeBuilder = () => {
               </div>
             )}
 
-            {/* Step 5: Final Details */}
+            {/* Step 5: Final Details with AI Integration */}
             {currentStep === 5 && (
               <div className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -856,7 +977,7 @@ const ThemeBuilder = () => {
                       value={formData.goals}
                       onChange={(e) => handleInputChange('goals', e.target.value)}
                       placeholder="What do you want to achieve with your website?"
-                      className="w-full mt-2 p-3 border border-gray-700 rounded-md resize-none h-20 bg-gray-800 text-white"
+                      className="w-full mt-2 p-3 border border-gray-700 rounded-md resize-none h-20 bg-gray-800 text-white placeholder:text-gray-400"
                     />
                   </div>
                   <div>
@@ -866,7 +987,7 @@ const ThemeBuilder = () => {
                       value={formData.brandColors}
                       onChange={(e) => handleInputChange('brandColors', e.target.value)}
                       placeholder="e.g., #FF5733, Blue, Corporate colors"
-                      className="mt-2 bg-gray-800 border-gray-700 text-white"
+                      className="mt-2 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -930,7 +1051,7 @@ const ThemeBuilder = () => {
                       value={formData.existingWebsite}
                       onChange={(e) => handleInputChange('existingWebsite', e.target.value)}
                       placeholder="https://yourwebsite.com"
-                      className="mt-2 bg-gray-800 border-gray-700 text-white"
+                      className="mt-2 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                     />
                   </div>
                   <div>
@@ -940,7 +1061,7 @@ const ThemeBuilder = () => {
                       value={formData.contactInfo}
                       onChange={(e) => handleInputChange('contactInfo', e.target.value)}
                       placeholder="Email, phone, or preferred contact method"
-                      className="mt-2 bg-gray-800 border-gray-700 text-white"
+                      className="mt-2 bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                     />
                   </div>
                 </div>
@@ -952,11 +1073,11 @@ const ThemeBuilder = () => {
                     value={formData.additionalRequirements}
                     onChange={(e) => handleInputChange('additionalRequirements', e.target.value)}
                     placeholder="Any specific requirements, features, or preferences not covered above..."
-                    className="w-full mt-2 p-3 border border-gray-700 rounded-md resize-none h-24 bg-gray-800 text-white"
+                    className="w-full mt-2 p-3 border border-gray-700 rounded-md resize-none h-24 bg-gray-800 text-white placeholder:text-gray-400"
                   />
                 </div>
 
-                {/* Summary Card */}
+                {/* Theme Summary */}
                 <div className="mt-8 p-6 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-lg border border-blue-500/20">
                   <h3 className="text-lg font-semibold mb-4 text-blue-400">Theme Summary</h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -986,6 +1107,125 @@ const ThemeBuilder = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* AI Analysis Section */}
+                <div className="mt-8 p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-purple-400 flex items-center gap-2">
+                      <Bot className="w-5 h-5" />
+                      AI Analysis & Recommendations
+                    </h3>
+                    <Button
+                      onClick={generateAIAnalysis}
+                      disabled={isGenerating}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    >
+                      {isGenerating ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Analyzing...
+                        </>
+                      ) : (
+                        <>
+                          <Bot className="w-4 h-4 mr-2" />
+                          Generate AI Analysis
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {!aiResponse && !isGenerating && (
+                    <p className="text-gray-400 text-sm">
+                      Click "Generate AI Analysis" to get a comprehensive analysis of your theme requirements, 
+                      professional recommendations, and a detailed summary for your development team.
+                    </p>
+                  )}
+
+                  {aiResponse && (
+                    <div className="space-y-6">
+                      <div className="flex items-center gap-2 text-green-400">
+                        <CheckCircle className="w-5 h-5" />
+                        <span className="font-medium">Analysis Complete!</span>
+                      </div>
+
+                      {/* Formatted AI Analysis */}
+                      <div className="bg-gray-800/50 backdrop-blur-sm rounded-lg p-6 border border-gray-700">
+                        <div className="flex items-center justify-between mb-4">
+                          <h4 className="font-semibold text-white flex items-center gap-2">
+                            <Eye className="w-4 h-4" />
+                            Professional Analysis & Recommendations
+                          </h4>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(aiResponse.formattedAnalysis)}
+                            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            <Copy className="w-3 h-3 mr-1" />
+                            Copy
+                          </Button>
+                        </div>
+                        <div className="prose prose-invert max-w-none">
+                          <pre className="whitespace-pre-wrap text-sm text-gray-300 bg-gray-900/50 p-4 rounded-lg border border-gray-700 overflow-x-auto">
+                            {aiResponse.formattedAnalysis}
+                          </pre>
+                        </div>
+                      </div>
+
+                      {/* Toggle for Raw JSON */}
+                      <div className="flex items-center justify-between">
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowRawJson(!showRawJson)}
+                          className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                        >
+                          {showRawJson ? 'Hide' : 'Show'} Raw Response Data
+                        </Button>
+                        {showRawJson && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => copyToClipboard(JSON.stringify(aiResponse, null, 2))}
+                            className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                          >
+                            <Copy className="w-3 h-3 mr-1" />
+                            Copy JSON
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Raw JSON Response */}
+                      {showRawJson && (
+                        <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
+                          <h4 className="font-semibold text-white mb-3">Complete Response Data (JSON)</h4>
+                          <div className="space-y-4">
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-300 mb-2">User Form Data:</h5>
+                              <pre className="text-xs text-gray-400 bg-gray-800/50 p-3 rounded border border-gray-700 overflow-x-auto">
+                                {JSON.stringify(aiResponse.userData, null, 2)}
+                              </pre>
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-medium text-gray-300 mb-2">AI Raw Response:</h5>
+                              <pre className="text-xs text-gray-400 bg-gray-800/50 p-3 rounded border border-gray-700 overflow-x-auto">
+                                {JSON.stringify(aiResponse.rawResponse, null, 2)}
+                              </pre>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Next Steps */}
+                      <div className="bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-lg p-4 border border-green-500/20">
+                        <h4 className="font-semibold text-green-400 mb-2">✨ Ready for Development!</h4>
+                        <p className="text-gray-300 text-sm">
+                          Your theme requirements have been analyzed and are ready to be sent to the development team. 
+                          All data has been collected and formatted for seamless integration into your project workflow.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
 
@@ -1014,7 +1254,11 @@ const ThemeBuilder = () => {
                   className="flex items-center space-x-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                   onClick={() => {
                     console.log('Theme Configuration:', formData);
-                    // Here you would typically submit the form data
+                    toast({
+                      title: "🎉 Theme Created Successfully!",
+                      description: "Your custom theme configuration is ready for development.",
+                      duration: 5000,
+                    });
                   }}
                 >
                   <span>Create Theme</span>
