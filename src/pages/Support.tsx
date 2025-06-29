@@ -42,7 +42,7 @@ const Support: React.FC = () => {
           <div className="max-w-5xl mx-auto mb-16">
             <Tabs defaultValue="faq" className="w-full">
               <TabsList className="grid grid-cols-3 mb-8">
-                <TabsTrigger value="faq" className="text-base py-3">
+                <TabsTrigger value="faq" className="text-base">
                   <BookOpen className="mr-2 h-5 w-5" />
                   FAQs
                 </TabsTrigger>

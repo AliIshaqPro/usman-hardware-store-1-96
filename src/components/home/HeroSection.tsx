@@ -1,7 +1,7 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const HeroSection: React.FC = () => {
   return (
@@ -27,13 +27,17 @@ const HeroSection: React.FC = () => {
               No coding required, just your vision.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-              <Button size="lg" className="bg-gradient-to-r from-theme-blue to-theme-purple hover:opacity-90 transition-opacity">
-                Start Building
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-              <Button size="lg" variant="outline" className="border-gray-700 hover:bg-gray-800">
-                View Themes Gallery
-              </Button>
+              <Link to="/themes">
+                <Button size="lg" className="bg-gradient-to-r from-theme-blue to-theme-purple hover:opacity-90 transition-opacity">
+                  Start Building
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/themes">
+                <Button size="lg" variant="outline" className="border-gray-700 hover:bg-gray-800">
+                  View Themes Gallery
+                </Button>
+              </Link>
             </div>
           </div>
           
