@@ -9,7 +9,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { 
   Check, Columns, Layout, Type, Download, Save, EyeIcon, 
   ArrowRight, ArrowLeft, Globe, Share2, PaletteIcon, 
-  ImageIcon, TypographyIcon, FramesIcon, BoxesIcon, 
+  ImageIcon, Frame, BoxesIcon, 
   SlackIcon, Grid3x3Icon, LaptopIcon, SmartphoneIcon, 
   TabletsIcon, Settings, Code, Paintbrush, FileText,
   ShoppingCart, Calendar, Mail, Phone, MapPin, Users,
@@ -17,7 +17,7 @@ import {
   Trophy, Bookmark, Clock, Filter, Search, Plus,
   Minus, Info, HelpCircle, ChevronDown, ChevronUp,
   Palette, Monitor, Tablet, Smartphone, Chrome,
-  Firefox, Safari, Github, Twitter, Facebook, Instagram,
+  Globe as BrowserIcon, Github, Twitter, Facebook, Instagram,
   Linkedin, Youtube, MessageCircle, Bell, Lock, Eye,
   EyeOff, Upload, X, CheckCircle, AlertCircle, Loader
 } from "lucide-react";
@@ -59,7 +59,7 @@ const features = [
   { id: "testimonials", name: "Testimonials", category: "Social Proof", icon: Star },
   { id: "portfolio", name: "Portfolio Gallery", category: "Content", icon: Camera },
   { id: "services", name: "Services Listing", category: "Content", icon: Layout },
-  { id: "multi-header", name: "Multiple Headers", category: "Design", icon: FramesIcon },
+  { id: "multi-header", name: "Multiple Headers", category: "Design", icon: Frame },
   { id: "multi-footer", name: "Multiple Footers", category: "Design", icon: BoxesIcon },
   { id: "product", name: "Product Showcase", category: "E-commerce", icon: ShoppingCart },
   { id: "events", name: "Event Calendar", category: "Features", icon: Calendar },
@@ -70,7 +70,7 @@ const features = [
   { id: "maps", name: "Google Maps", category: "Location", icon: MapPin },
   { id: "multilang", name: "Multi-language", category: "Accessibility", icon: Globe },
   { id: "forms", name: "Custom Forms Builder", category: "Tools", icon: FileText },
-  { id: "analytics", name: "Analytics Integration", category: "Marketing", icon: TypographyIcon },
+  { id: "analytics", name: "Analytics Integration", category: "Marketing", icon: Type },
   { id: "chat", name: "Live Chat Support", category: "Communication", icon: MessageCircle },
   { id: "payments", name: "Payment Integration", category: "E-commerce", icon: ShoppingCart },
   { id: "reviews", name: "Reviews & Ratings", category: "Social Proof", icon: Star },
