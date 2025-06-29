@@ -128,14 +128,11 @@ export const LiveChat = () => {
           <SheetHeader className="bg-gradient-to-r from-theme-blue to-theme-purple p-4 text-white">
             <div className="flex justify-between items-center">
               <SheetTitle className="text-white">Live Chat Support</SheetTitle>
-              <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)} className="text-white">
-                <X size={18} />
-              </Button>
             </div>
             <p className="text-sm opacity-90 mt-1">We typically reply within minutes</p>
           </SheetHeader>
           
-          <div className="flex flex-col h-[calc(100vh-200px)]">
+          <div className="flex flex-col h-[calc(100vh-85px)]">
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg) => (
                 <div

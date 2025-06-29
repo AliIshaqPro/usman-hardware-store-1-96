@@ -1,3 +1,5 @@
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -525,7 +527,9 @@ const ThemeBuilder = () => {
   }, {} as Record<string, typeof features>);
 
   return (
-    <div className="min-h-screen bg-gray-950 py-8 px-4">
+    
+    <div className="min-h-screen bg-gray-950 py-20 px-4">
+      <Navbar />
       <div className="max-w-6xl mx-auto">
         {/* Progress Header */}
         <div className="mb-8">
@@ -536,7 +540,8 @@ const ThemeBuilder = () => {
             <p className="text-gray-400 text-lg">Create your perfect website theme with our advanced customization options</p>
           </div>
           
-          <div className="flex justify-between items-center mb-4">
+          {/* Desktop Steps - Show all steps */}
+          <div className="hidden lg:flex justify-between items-center mb-4">
             {steps.map((step, index) => (
               <div key={step.number} className={`flex items-center ${index < steps.length - 1 ? 'flex-1' : ''}`}>
                 <div className={`flex flex-col items-center ${currentStep >= step.number ? 'text-blue-400' : 'text-gray-500'}`}>
@@ -557,6 +562,69 @@ const ThemeBuilder = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Tablet Steps - Show 3 steps centered around current */}
+          <div className="hidden md:flex lg:hidden justify-center items-center mb-4">
+            <div className="flex items-center space-x-4">
+              {(() => {
+                const startIndex = Math.max(0, Math.min(currentStep - 2, steps.length - 3));
+                const endIndex = Math.min(startIndex + 3, steps.length);
+                const visibleSteps = steps.slice(startIndex, endIndex);
+                
+                return visibleSteps.map((step, index) => (
+                  <div key={step.number} className="flex items-center">
+                    <div className={`flex flex-col items-center ${currentStep >= step.number ? 'text-blue-400' : 'text-gray-500'}`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-semibold mb-1 ${
+                        currentStep >= step.number ? 'bg-blue-500 text-white' : 'bg-gray-700 text-gray-400'
+                      }`}>
+                        {step.number}
+                      </div>
+                      <div className="text-center">
+                        <div className="font-medium text-xs text-white">{step.title}</div>
+                      </div>
+                    </div>
+                    {index < visibleSteps.length - 1 && (
+                      <div className={`w-8 h-1 mx-2 rounded ${
+                        currentStep > step.number ? 'bg-blue-500' : 'bg-gray-700'
+                      }`} />
+                    )}
+                  </div>
+                ));
+              })()}
+            </div>
+          </div>
+
+          {/* Mobile Steps - Show only current step */}
+          <div className="md:hidden mb-4">
+            <div className="flex flex-col items-center">
+              <div className="flex items-center mb-3">
+                <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center font-bold text-lg">
+                  {currentStep}
+                </div>
+                <div className="ml-4">
+                  <div className="font-semibold text-white text-lg">{steps[currentStep - 1].title}</div>
+                  <div className="text-gray-400 text-sm">{steps[currentStep - 1].description}</div>
+                </div>
+              </div>
+              
+              {/* Mobile Step Dots */}
+              <div className="flex space-x-2">
+                {steps.map((step) => (
+                  <div
+                    key={step.number}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      currentStep >= step.number ? 'bg-blue-500' : 'bg-gray-600'
+                    }`}
+                  />
+                ))}
+              </div>
+              
+              {/* Mobile Step Counter */}
+              <div className="mt-2 text-sm text-gray-400">
+                Step {currentStep} of {steps.length}
+              </div>
+            </div>
           </div>
           
           <Progress value={(currentStep / 5) * 100} className="w-full bg-gray-800" />
@@ -793,7 +861,7 @@ const ThemeBuilder = () => {
                 </div>
 
                 <Tabs defaultValue="Core" className="w-full">
-                  <TabsList className="grid w-full grid-cols-4 lg:grid-cols-8 bg-gray-800">
+                  <TabsList className="flex w-full overflow-x-auto whitespace-nowrap gap-2 bg-gray-800">
                     {Object.keys(groupedFeatures).slice(0, 8).map((category) => (
                       <TabsTrigger key={category} value={category} className="text-xs data-[state=active]:bg-blue-600">
                         {category}
@@ -826,7 +894,7 @@ const ThemeBuilder = () => {
                 <div className="mt-8">
                   <h4 className="text-md font-semibold mb-4 text-white">Additional Categories</h4>
                   <Tabs defaultValue={Object.keys(groupedFeatures)[8]} className="w-full">
-                    <TabsList className="grid w-full grid-cols-4 lg:grid-cols-6 bg-gray-800">
+                    <TabsList className="flex w-full overflow-x-auto whitespace-nowrap gap-2 bg-gray-800">
                       {Object.keys(groupedFeatures).slice(8).map((category) => (
                         <TabsTrigger key={category} value={category} className="text-xs data-[state=active]:bg-blue-600">
                           {category}
@@ -1110,7 +1178,7 @@ const ThemeBuilder = () => {
 
                 {/* AI Analysis Section */}
                 <div className="mt-8 p-6 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-lg border border-purple-500/20">
-                  <div className="flex items-center justify-between mb-4">
+                  <div className=" mb-4">
                     <h3 className="text-lg font-semibold text-purple-400 flex items-center gap-2">
                       <Bot className="w-5 h-5" />
                       AI Analysis & Recommendations
@@ -1118,17 +1186,20 @@ const ThemeBuilder = () => {
                     <Button
                       onClick={generateAIAnalysis}
                       disabled={isGenerating}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700
+                        whitespace-normal text-sm px-3 py-2
+                        w-full max-w-xs md:w-auto md:max-w-none md:px-4 md:py-2"
+                      style={{wordBreak: 'break-word'}}
                     >
                       {isGenerating ? (
                         <>
                           <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          Analyzing...
+                          <span className="truncate">Analyzing...</span>
                         </>
                       ) : (
                         <>
                           <Bot className="w-4 h-4 mr-2" />
-                          Generate AI Analysis
+                          <span className="truncate">Generate AI Analysis</span>
                         </>
                       )}
                     </Button>
